@@ -5,13 +5,14 @@ Created on 01.11.2013
 '''
 from PyQt4 import QtCore, QtGui
 
-
 from rpcore.consts import applicationName,applicationVersion
+from rpcore.actions import createAction,addActions
+from rpgui.rpcentralwidget import RpCentralWidget
 import imagercc
 
 class RpMainWindow(QtGui.QMainWindow):
     '''
-    Main window for elisaSolver
+    Main window
     '''
 
     def __init__(self, parent=None):
@@ -21,11 +22,17 @@ class RpMainWindow(QtGui.QMainWindow):
         super(RpMainWindow, self).__init__(parent)
         self.setObjectName("rpMainWindow") 
         self.setWindowTitle(applicationName+' '+str(applicationVersion))
-        #
-                
+        self.mainWidget = RpCentralWidget()      
+        self.setCentralWidget(self.mainWidget)
         
-        #self.setCentralWidget(mainWindow)
-        #
+        
+        projectMenu = self.menuBar().addMenu("&File")
+        addActions(projectMenu, self.mainWidget.actionList)
+        quitAction = createAction(self,'Exit...', QtGui.QKeySequence.Quit, 
+                                          'application-exit', 'Exit program')
+        projectMenu.addAction(quitAction)
+        
+        
         
     '''
     def closeEvent(self, event):
