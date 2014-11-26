@@ -17,6 +17,8 @@ class Experiment(QtCore.QObject):
     signalConcentrationsChanged = QtCore.pyqtSignal(object)
     signalSampleAdded = QtCore.pyqtSignal(Sample)
     signalSampleRemoved = QtCore.pyqtSignal(Sample)
+    plotColors=['red','orange','gold','blue','purple','brown','pink'] 
+    referenceColor='darkgreen'
 
     def __init__(self, parent=None):
         '''
@@ -46,26 +48,34 @@ class Experiment(QtCore.QObject):
         self.signalSampleAdded.emit(sample)
               
     def plot(self):
-        maxc=max(self.concentrations)
-        minc=min(self.concentrations)
+        '''
+        concentrations = np.array(
+            [conc+1 for conc in self.concentrations])
+        '''
+        concentrations = self.concentrations
+        maxc=max(concentrations)
+        minc=min(concentrations)
         xsize=maxc-minc
         xstart=minc-0.1*xsize
         xstop=maxc+0.1*xsize
         cc=np.linspace(minc, maxc, 100)
-        for sample in self.samples.values():
-            plt1=sample.approximation.fitPlot(self.concentrations,sample.meanActivities())
-            plt1.show()
-        plt.close()
-        for sample in self.samples.values():
-            plt.plot(cc, sample.approximation.eval(cc),'-',self.concentrations,sample.meanActivities(),'o')
+        legend=[]
+        for i,sample in enumerate(self.samples.values()):
+            if sample.name == self.referenceName:
+                color =self.referenceColor
+                marker='s'
+                linewidth = 2
+            else:
+                color=self.plotColors[i]
+                marker='o'
+                linewidth = 1
+            plt.plot(cc, sample.approximation.eval(cc),'-',linewidth = linewidth,color=color)
+            plt.plot(concentrations,sample.meanActivities(),marker, color=color)
+            legend += [sample.name, '']
         plt.xlim((xstart, xstop))
-        #plt.title('Least-squares {} fit, R^2={:.3f}'.format(self.name,self.rsquared))
-        #plt.legend([self.name+' fit', 'Reference'], loc='upper left')
-        #params = ascii_uppercase[:len(self.p)]
-        #ycor = max(y)
-        #ystep = (ycor-min(y))/8
-        #for i, (param, est) in enumerate(zip(params, self.p)):
-         #   plt.text(minx, ycor*0.8-i*ystep, 'est({}) = {:.3f}'.format(param, est))
+        plt.title('Data fit')
+        plt.legend(legend, loc='lower right')
+        #plt.xscale('log')
         return plt
               
     def initTestData(self):

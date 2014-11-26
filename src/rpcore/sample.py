@@ -18,10 +18,14 @@ class Sample(object):
         '''
         self.name=name
         self.activities=np.array(activities)
+        self.replicasCount=len(self.activities)
+        self.meanVector = np.empty(self.replicasCount)
+        print self.meanVector
+        self.meanVector.fill(1/self.replicasCount)
         self.approximation=None
         
     def meanActivities(self):
-        return np.dot(np.array([1/3,1/3,1/3]),self.activities)
+        return np.dot(self.meanVector,self.activities)
     
     def setApproximation(self, approximation):
         self.approximation = approximation
