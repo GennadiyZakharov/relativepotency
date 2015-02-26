@@ -6,28 +6,32 @@ Created on Oct 30, 2014
 from __future__ import division
 
 import numpy as np
+from rpcore.logistic4 import Logistic4
 
 class Sample(object):
     '''
-    This class holds data for one sample - name and activity data
+    This class holds data for one sample - name concenttration and dencity data
     '''
 
-    def __init__(self, name, activities):
+    def __init__(self, name, concentrations, densities):
         '''
         Constructor
         '''
-        self.name=name
-        self.activities=np.array(activities)
-        self.replicasCount=len(self.activities)
-        self.meanVector = np.empty(self.replicasCount)
-        print self.meanVector
-        self.meanVector.fill(1/self.replicasCount)
+        self.name=name # Sample name
+        self.concentrations=np.array(concentrations) # 1D np array for concentrations
+        self.densities=np.array(densities) # 2D numpy array with densities replicas
+        replicasCount,measuresCount=self.densities.shape
+        if measuresCount != len (self.concentrations) :
+            raise
+        meanVector = np.empty(replicasCount)
+        meanVector.fill(1/replicasCount)
+        self.meanDensities = np.dot(meanVector,self.densities)
         self.approximation=None
         
-    def meanActivities(self):
-        return np.dot(self.meanVector,self.activities)
+    def findApproximation(self):
+        self.approximation = Logistic4(self.concentrations,self.meanDensities)
+        
     
-    def setApproximation(self, approximation):
-        self.approximation = approximation
+        
 
         

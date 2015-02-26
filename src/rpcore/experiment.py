@@ -8,15 +8,14 @@ import matplotlib.pyplot as plt
 from PyQt4 import QtCore
 
 from rpcore.sample import Sample
-from rpcore.logistic4 import Logistic4
 
 class Experiment(QtCore.QObject):
     '''
-    This class holds data for set of sample with common Concentration Value
+    This class holds data for set of samples
     '''
-    signalConcentrationsChanged = QtCore.pyqtSignal(object)
     signalSampleAdded = QtCore.pyqtSignal(Sample)
     signalSampleRemoved = QtCore.pyqtSignal(Sample)
+    signalReferenceChanged = QtCore.pyqtSignal(str)
     plotColors=['red','orange','gold','blue','purple','brown','pink'] 
     referenceColor='darkgreen'
 
@@ -25,13 +24,8 @@ class Experiment(QtCore.QObject):
         Constructor
         '''
         super(Experiment, self).__init__(parent)
-        self.concentrations = None
         self.samples = {} # sample name as a key, and list of data in item
-        self.referenceName = ''
-        
-    def setConcentrations(self, concentrations):
-        self.concentrations= np.array(concentrations)
-        self.signalConcentrationsChanged.emit(self.concentrations)
+        self.referenceSampleName = ''
         
     def setReference(self, name):
         if name in self.samples.keys() :
@@ -40,25 +34,15 @@ class Experiment(QtCore.QObject):
             self.referenceName = ''
             
     def addSample(self, sample):
-        for dataset in sample.activities :
-            if len(dataset) != len(self.concentrations):
-                raise
         self.samples[sample.name]=sample
-        sample.setApproximation(Logistic4(self.concentrations,sample.meanActivities()))
+        sample.findApproximation()
         self.signalSampleAdded.emit(sample)
               
-    def plot(self):
-        '''
-        concentrations = np.array(
-            [conc+1 for conc in self.concentrations])
-        '''
-        concentrations = self.concentrations
-        maxc=max(concentrations)
-        minc=min(concentrations)
-        xsize=maxc-minc
-        xstart=minc-0.1*xsize
-        xstop=maxc+0.1*xsize
-        cc=np.linspace(minc, maxc, 100)
+    def plotSamples(self):
+        #xsize=maxc-minc
+        #xstart=minc-0.1*xsize
+        #xstop=maxc+0.1*xsize
+        #
         legend=[]
         for i,sample in enumerate(self.samples.values()):
             if sample.name == self.referenceName:
@@ -69,29 +53,32 @@ class Experiment(QtCore.QObject):
                 color=self.plotColors[i]
                 marker='o'
                 linewidth = 1
-            plt.plot(cc, sample.approximation.eval(cc),'-',linewidth = linewidth,color=color)
-            plt.plot(concentrations,sample.meanActivities(),marker, color=color)
+            plt.plot(sample.concentrations,sample.meanDensities,marker, color=color)
+            cc=np.linspace(min(sample.concentrations), max(sample.concentrations), 100)
+            if sample.approximation is not None:
+                plt.plot(cc, sample.approximation.eval(cc),'-',linewidth = linewidth,color=color)
+            
             legend += [sample.name, '']
-        plt.xlim((xstart, xstop))
+        #plt.xlim((xstart, xstop))
         plt.title('Data fit')
         plt.legend(legend, loc='lower right')
         #plt.xscale('log')
         return plt
               
     def initTestData(self):
-        self.setConcentrations([10, 3.333333333, 1.111111111, 0.37037037, 0.12345679, 0.041152263, 0.013717421, 0])
-        control = Sample('Control', [
+        concentrations = [10, 3.333333333, 1.111111111, 0.37037037, 0.12345679, 0.041152263, 0.013717421, 0]
+        control = Sample('Control', concentrations, [
             [3478, 3617, 3336, 2865, 1236, 425, 172, 150],
             [3810, 3557, 3294, 2917, 1250, 449, 192, 57],
             [4083, 4055, 3534, 2708, 1169, 620, 226, 84]])
         self.addSample(control)
         self.setReference(control.name)
-        exp1 = Sample('Experiment 1', [
+        exp1 = Sample('Experiment 1', concentrations, [
             [5000, 4176,3822,2106,743,296,154,94],
             [3944,3657,2972,1935,801,254,142,84],
             [4083,3886,3402,2116,677,241,136,77]])
         self.addSample(exp1)
-        exp2 = Sample('Experiment 2', [
+        exp2 = Sample('Experiment 2', concentrations, [
             [4250,3955,3148,1732,529,206,144,76],
             [4049,3876,3211,1719,549,189,113,64],
             [4489,4195,3306,1917,594,223,124,87]])
