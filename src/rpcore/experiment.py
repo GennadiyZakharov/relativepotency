@@ -64,8 +64,29 @@ class Experiment(QtCore.QObject):
         plt.legend(legend, loc='lower right')
         #plt.xscale('log')
         return plt
-              
+    
+    def openSamples(self, sampleFileName):
+        sampleFile=open(sampleFileName)
+        while True:
+            sample = self.readSample(sampleFile)
+            if sample is None:
+                break
+            self.addSample(sample)
+    
+    def readSample(self, sampleFile):
+        line = sampleFile.readline()
+        if line is None :
+            return None
+        sampleName=line.strip()
+        if sampleName == '' :
+            return None
+        data = np.read()
+        concentrations=data[:,0]
+        activities = data[:,1:]
+        return Sample(sampleName,concentrations, activities)
+           
     def initTestData(self):
+        '''
         concentrations = [10, 3.333333333, 1.111111111, 0.37037037, 0.12345679, 0.041152263, 0.013717421, 0]
         control = Sample('Control', concentrations, [
             [3478, 3617, 3336, 2865, 1236, 425, 172, 150],
@@ -83,6 +104,13 @@ class Experiment(QtCore.QObject):
             [4049,3876,3211,1719,549,189,113,64],
             [4489,4195,3306,1917,594,223,124,87]])
         self.addSample(exp2)
+        '''
+        concentrations = [1667, 556, 185,62,21,7,2,0]
+        control = Sample('Control', concentrations, [
+            [83,    100,    183,    401,    630,    671    688    630],
+            [87,    102,    193,    368,    524,    620    600    624],
+            [93,    95,     200,    401,    575,    690    658    641]])
+        
         
         
     
